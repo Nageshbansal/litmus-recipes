@@ -1,0 +1,43 @@
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: engine-nginx
+  namespace: litmus
+spec:
+  engineState: "active"
+  annotationCheck: "false"
+  appinfo:
+    appns: "litmus"
+    applabel: "app=nginx"
+    appkind: "deployment"
+  chaosServiceAccount: pod-delete-sa
+  jobCleanUpPolicy: retain
+  experiments:
+  - name: pod-delete
+    spec:
+      probe:
+        - name: 'http-probe'
+          type: 'httpProbe'
+          httpProbe/inputs:
+            url: 'https://google.com'
+            method:
+              get:
+                criteria: ==
+                responseCode: '200'
+          mode: 'Continuous'
+          runProperties:
+            probeTimeout: '10s'
+            interval: '5s'
+            retry: 1
+            probePollingInterval: '2s'
+      components:        
+        env:
+        # provided as true for the force deletion of pod
+        # supports true and false value
+        - name: FORCE
+          value: 'false'
+        - name: CHAOS_INTERVAL
+          value: '10'
+          
+        - name: TOTAL_CHAOS_DURATION
+          value: '60'
